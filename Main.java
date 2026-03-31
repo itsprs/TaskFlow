@@ -1,63 +1,99 @@
 
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
 
+    private final Scanner scanner = new Scanner(System.in);
+    private final Map<String, Runnable> menuActions = new HashMap<>();
+    private final List<Task> taskList = new ArrayList<>();
+
+    private final TaskRepository repository = new TaskRepository("tasks.txt");
+
     public static void main(String[] args) {
+        new Main().run();
+    }
 
-        try (Scanner scanner = new Scanner(System.in)) {
-            boolean running = true;
+    private void run() {
+        taskList.addAll(repository.load());
 
-            while (running) {
-                showMenu();
-
-                System.out.print("Enter choice: ");
-                String input = scanner.nextLine();
-
-                switch (input) {
-                    case "1" ->
-                        handleAddTask();
-                    case "2" ->
-                        handleViewTasks();
-                    case "3" ->
-                        handleCompleteTask();
-                    case "4" ->
-                        handleDeleteTask();
-                    case "5" -> {
-                        System.out.println("Exiting TaskFlow... 👋");
-                        running = false;
-                    }
-                    default ->
-                        System.out.println("❌ Invalid choice. Try again.");
-                }
+        initMenu();
+        while (true) {
+            System.out.print("\nChoice > ");
+            String choice = scanner.nextLine();
+            if (menuActions.containsKey(choice)) {
+                menuActions.get(choice).run();
+                repository.save(taskList);
+            } else {
+                System.out.println("Invalid option.");
             }
         }
     }
 
-    private static void showMenu() {
-        System.out.println("\n========== TASKFLOW ==========\n");
-        System.out.println("1. Add Task");
-        System.out.println("2. View Tasks");
-        System.out.println("3. Complete Task");
-        System.out.println("4. Delete Task");
-        System.out.println("5. Exit");
-        System.out.println("\n==============================\n");
+    private void handleAddTask() {
+        System.out.print("Enter task title: ");
+        String title = scanner.nextLine();
+        taskList.add(new BasicTask(title));
+        System.out.println("Task added!");
     }
 
-    // ---- Placeholder methods (we'll implement later) ----
-    private static void handleAddTask() {
-        System.out.println("👉 Add Task (coming next)");
+    private void handleViewTasks() {
+        if (taskList.isEmpty()) {
+            System.out.println("No tasks found.");
+            return;
+        }
+        for (int i = 0; i < taskList.size(); i++) {
+            System.out.println((i + 1) + ". " + taskList.get(i).getDetails());
+        }
     }
 
-    private static void handleViewTasks() {
-        System.out.println("📋 View Tasks (coming next)");
+    private void handleCompleteTask() {
+        handleViewTasks();
+        if (taskList.isEmpty()) {
+            return;
+        }
+
+        System.out.print("Enter task number to complete: ");
+        try {
+            int index = Integer.parseInt(scanner.nextLine()) - 1;
+            taskList.get(index).complete();
+            System.out.println("Task marked as done!");
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            System.out.println("Invalid input.");
+        }
     }
 
-    private static void handleCompleteTask() {
-        System.out.println("✔ Complete Task (coming next)");
+    private void handleDeleteTask() {
+        handleViewTasks();
+        if (taskList.isEmpty()) {
+            return;
+        }
+
+        System.out.print("Enter task number to delete: ");
+        try {
+            int index = Integer.parseInt(scanner.nextLine()) - 1;
+            taskList.remove(index);
+            System.out.println("Task deleted.");
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            System.out.println("Invalid input.");
+        }
     }
 
-    private static void handleDeleteTask() {
-        System.out.println("🗑 Delete Task (coming next)");
+    private void handleExit() {
+        System.out.println("Goodbye!");
+        System.exit(0);
+    }
+
+    private void menuItem(String key, String label, Runnable action) {
+        System.out.println(key + ". " + label);
+        menuActions.put(key, action);
+    }
+
+    private void initMenu() {
+        System.out.println("\n--- TASK MANAGER ---");
+        menuItem("1", "[+] Add Task", this::handleAddTask);
+        menuItem("2", "[-] View Tasks", this::handleViewTasks);
+        menuItem("3", "[v] Complete", this::handleCompleteTask);
+        menuItem("4", "[x] Delete", this::handleDeleteTask);
+        menuItem("5", "[^] Exit", this::handleExit);
     }
 }
