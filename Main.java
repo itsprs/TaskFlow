@@ -20,6 +20,7 @@ public class Main {
         while (true) {
             System.out.print("\nChoice > ");
             String choice = scanner.nextLine();
+            System.out.println();
             if (menuActions.containsKey(choice)) {
                 menuActions.get(choice).run();
                 repository.save(taskList);
@@ -89,11 +90,12 @@ public class Main {
     }
 
     private void initMenu() {
-        System.out.println("\n--- TASK MANAGER ---");
+        System.out.println("\n--- TASK MANAGER ---\n");
         menuItem("1", "[+] Add Task", this::handleAddTask);
         menuItem("2", "[-] View Tasks", this::handleViewTasks);
         menuItem("3", "[v] Complete", this::handleCompleteTask);
         menuItem("4", "[x] Delete", this::handleDeleteTask);
         menuItem("5", "[^] Exit", this::handleExit);
+        System.out.println();
     }
 }
